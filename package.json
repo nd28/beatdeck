@@ -1,0 +1,14 @@
+{
+  "name": "beatdeck",
+  "version": "1.0.0",
+  "description": "Phone remote for instrumental hip-hop mixes playing in a bctl-driven Brave tab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "start": "vite"
+  },
+  "devDependencies": {
+    "vite": "^8.2.2"
+  }
+}
