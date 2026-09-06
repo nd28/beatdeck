@@ -6,6 +6,15 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-09-06
+
+### Fixed
+- Volume on macOS. `wpctl` is PipeWire-only, so on a Mac the volume presets
+  returned `{ok:1}` while doing nothing and status reported `vol: null`.
+  Volume now goes through `osascript` (`set volume output volume N`) on
+  darwin and `wpctl` everywhere else. Playback via `bctl` already worked.
+- `vol` clamps its input to 0-100 instead of passing whatever came in.
+
 ## [1.2.0] - 2026-09-06
 
 ### Added
@@ -59,7 +68,8 @@ versions follow [Semantic Versioning](https://semver.org/).
 - Fixed bottom bar with progress, now-playing text, transport buttons, and
   25/50/75/100 volume presets.
 
-[Unreleased]: https://github.com/nd28/beatdeck/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/nd28/beatdeck/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/nd28/beatdeck/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/nd28/beatdeck/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/nd28/beatdeck/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/nd28/beatdeck/releases/tag/v1.0.0

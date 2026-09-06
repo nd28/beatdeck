@@ -23,6 +23,15 @@ const sh = (cmd, args) => new Promise(res =>
 const bctl = (...a) => sh('bctl', [...a, '--match', 'youtube'])
 const ev = js => bctl('eval', js)
 
+// system volume, 0-100. linux = pipewire via wpctl, mac = osascript
+const volume = process.platform === 'darwin' ? {
+  get: async () => parseInt(await sh('osascript', ['-e', 'output volume of (get volume settings)'])),
+  set: v => sh('osascript', ['-e', `set volume output volume ${v}`]),
+} : {
+  get: async () => { const m = (await sh('wpctl', ['get-volume', '@DEFAULT_AUDIO_SINK@'])).match(/[\d.]+/); return m ? Math.round(parseFloat(m[0]) * 100) : NaN },
+  set: v => sh('wpctl', ['set-volume', '@DEFAULT_AUDIO_SINK@', String(v / 100)]),
+}
+
 const play = async i => {
   const songs = load()
   cur = (i + songs.length) % songs.length
@@ -37,8 +46,8 @@ const status = async () => {
   try { s = JSON.parse(raw) } catch { }
   const m = s.url.match(/v=([^&]+)/)
   if (m) { const i = load().findIndex(x => x.id === m[1]); if (i >= 0) cur = i }
-  const vol = (await sh('wpctl', ['get-volume', '@DEFAULT_AUDIO_SINK@'])).match(/[\d.]+/)
-  return { ...s, cur, vol: vol ? Math.round(parseFloat(vol[0]) * 100) : null }
+  const vol = await volume.get()
+  return { ...s, cur, vol: Number.isFinite(vol) ? vol : null }
 }
 
 const api = {
@@ -48,7 +57,7 @@ const api = {
   next: () => play(cur + 1),
   prev: () => play(cur - 1),
   play: q => play(parseInt(q.get('i') || '0')),
-  vol: async q => { await sh('wpctl', ['set-volume', '@DEFAULT_AUDIO_SINK@', String(parseInt(q.get('v')) / 100)]); return { ok: 1 } },
+  vol: async q => { await volume.set(Math.max(0, Math.min(100, parseInt(q.get('v')) || 0))); return { ok: 1 } },
 }
 
 export default defineConfig({

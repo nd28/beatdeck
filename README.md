@@ -6,7 +6,8 @@ live sets, and Taylor Swift mixes and full concerts.
 
 One Vite process does both jobs: serves the page, and a tiny middleware in
 `vite.config.js` shells out to `bctl` (Chrome DevTools driver) for the player
-and `wpctl` for system volume. No build, no backend framework.
+and `wpctl` (Linux/PipeWire) or `osascript` (macOS) for system volume. No
+build, no backend framework.
 
 ## Run
 
@@ -15,8 +16,9 @@ npm i
 npm start          # 0.0.0.0:5180
 ```
 
-Open `http://<machine-ip>:5180` on the phone. Needs `bctl` and `wpctl` on the
-PATH of the machine running it, and a Brave tab whose URL matches `youtube`
+Open `http://<machine-ip>:5180` on the phone. Needs `bctl` on the PATH of the
+machine running it (plus `wpctl` on Linux; macOS uses the built-in
+`osascript`), and a Brave tab whose URL matches `youtube`
 (`bctl open https://www.youtube.com` if there isn't one).
 
 ## Controls
