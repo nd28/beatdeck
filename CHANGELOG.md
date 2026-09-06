@@ -16,6 +16,17 @@ versions follow [Semantic Versioning](https://semver.org/).
   single beats dropped; everything left is 50 min to 4 h. One exception to
   the label: DJ Elly's all-vinyl Nujabes set has a few vocal cuts.
 
+### Fixed
+- With two YouTube tabs open the remote could steer the wrong one. Every
+  command went `bctl --match youtube`, which is "first tab whose URL or
+  title contains youtube", so a search tab or a second video listed above
+  the deck's tab took over and the deck's own tab dropped off the radar.
+  The server now owns one tab by DevTools target id and addresses it with
+  `--tab N`. If that tab is gone (restart, closed) it adopts a YouTube tab
+  playing something from `songs.json`, else the first YouTube tab, else
+  opens a fresh one — and sticks with it from then on.
+
+
 ## [1.4.0] - 2026-09-06
 
 ### Added

@@ -21,19 +21,56 @@ const run = (cmd, args) => new Promise(res =>
   execFile(cmd, args, { timeout: 15000 }, (e, out, err) => res({ ok: !e, out: e ? (err || e.message).trim() : out.trim() })))
 const sh = async (cmd, args) => (await run(cmd, args)).out
 
-const bctl = (...a) => sh('bctl', [...a, '--match', 'youtube'])
+// the deck owns one tab, tracked by devtools target id. `bctl --match youtube`
+// would grab whichever youtube tab is listed first, so a second youtube tab
+// (a search, something else playing) could get steered instead of ours.
+const cdp = `http://127.0.0.1:${process.env.BCTL_PORT || 9222}`
+let tabId = null
+
+// same filter bctl uses for its tab indices, so --tab N lines up
+const pages = async () => {
+  try {
+    const ts = await (await fetch(`${cdp}/json`)).json()
+    return ts.filter(t => t.type === 'page' && !t.url.startsWith('devtools://'))
+  } catch { return [] }
+}
+
+// index of our tab in bctl's list, or -1. if the remembered tab is gone
+// (server restarted, tab closed) adopt one: prefer a youtube tab playing
+// something from songs.json, else the first youtube tab.
+const tab = async () => {
+  const ps = await pages()
+  let i = tabId ? ps.findIndex(t => t.id === tabId) : -1
+  if (i < 0) {
+    const ids = new Set(load().map(s => s.id))
+    const yt = t => /youtube\.com/.test(t.url)
+    const ours = t => yt(t) && ids.has((t.url.match(/v=([^&]+)/) || [])[1])
+    i = ps.findIndex(ours)
+    if (i < 0) i = ps.findIndex(yt)
+    tabId = i >= 0 ? ps[i].id : null
+    if (tabId) console.log(`beatdeck: adopted tab ${tabId} ${ps[i].url}`)
+  }
+  return i
+}
+
+const bctl = async (...a) => {
+  const i = await tab()
+  return i < 0 ? '' : sh('bctl', [...a, '--tab', String(i)])
+}
 const ev = js => bctl('eval', js)
 
-// navigate the youtube tab; if it was closed, open a fresh one instead.
+// navigate our tab; if there isn't one, open a fresh one and remember it.
 // a tab made through devtools starts hidden and youtube won't load media
 // until it's visible, so bring it to the front too.
-const cdp = `http://127.0.0.1:${process.env.BCTL_PORT || 9222}`
 const goto = async url => {
-  const r = await run('bctl', ['goto', url, '--match', 'youtube'])
-  if (r.ok) return
+  const i = await tab()
+  if (i >= 0) {
+    const r = await run('bctl', ['goto', url, '--tab', String(i)])
+    if (r.ok) return
+  }
   console.log('beatdeck: no youtube tab, opening one')
   const id = (await run('bctl', ['open', url])).out
-  if (id) await fetch(`${cdp}/json/activate/${id}`).catch(() => { })
+  if (id) { tabId = id; await fetch(`${cdp}/json/activate/${id}`).catch(() => { }) }
 }
 
 // system volume, 0-100. linux = pipewire via wpctl, mac = osascript
