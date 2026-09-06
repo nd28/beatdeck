@@ -12,7 +12,7 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{margin:0;font-family:Geist,system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;
     background-image:radial-gradient(60vw 60vw at 80% -10%,color-mix(in srgb,var(--pink-bold) 30%,transparent),transparent 70%),radial-gradient(50vw 50vw at -10% 100%,color-mix(in srgb,var(--mint) 25%,transparent),transparent 70%);background-attachment:fixed}
-  main{max-width:520px;margin:0 auto;padding:24px 16px calc(220px + env(safe-area-inset-bottom))}
+  main{max-width:520px;margin:0 auto;padding:24px 16px calc(110px + env(safe-area-inset-bottom))}
   h1{font-size:14px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:8px 4px 16px}
   ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
   li{display:flex;align-items:center;gap:14px;padding:10px 14px 10px 10px;border-radius:24px;background:var(--surface);border:1px solid var(--border);backdrop-filter:blur(14px);cursor:pointer;transition:background .15s,transform .1s}
@@ -25,16 +25,38 @@
   .s{font-size:12px;color:var(--muted);margin-top:3px;font-family:"Geist Mono",monospace}
   .bar{position:fixed;left:0;right:0;bottom:0;padding:14px 16px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px;align-items:center;
     background:color-mix(in srgb,var(--bg) 55%,transparent);backdrop-filter:blur(24px);border-top:1px solid var(--border)}
-  .now{font-size:12px;color:var(--muted);max-width:520px;width:100%;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:"Geist Mono",monospace}
-  .row{display:flex;gap:10px;align-items:center;justify-content:center;width:100%;max-width:520px}
-  button{font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border);backdrop-filter:blur(14px);border-radius:999px;cursor:pointer;transition:background .15s,transform .1s}
+  /* dock: a pill that grows into the deck */
+  .dock{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(520px,calc(100% - 24px));
+    border-radius:40px;background:color-mix(in srgb,var(--bg) 55%,transparent);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--border);
+    box-shadow:0 12px 40px rgba(0,0,0,.25);overflow:hidden;transition:border-radius .3s,box-shadow .3s}
+  .dock.open{border-radius:28px;box-shadow:0 16px 60px rgba(0,0,0,.4),0 0 0 3px color-mix(in srgb,var(--pink-bold) 20%,transparent)}
+  .pill{display:flex;align-items:center;gap:12px;padding:8px 8px 8px 8px;cursor:pointer;user-select:none;position:relative}
+  .pth{width:48px;height:48px;border-radius:50%;object-fit:cover;flex:none;background:var(--surface-2);border:1px solid var(--border);transition:transform .3s}
+  .dock.open .pth{transform:scale(1.08)}
+  .pill.live .pth{animation:spin 12s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .pm{min-width:0;flex:1}
+  .pt{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ps{font-size:11px;color:var(--muted);font-family:"Geist Mono",monospace;margin-top:2px}
+  .mini{width:44px;height:44px;flex:none;font-size:16px;display:grid;place-items:center;background:var(--pink-bold);color:#fff;border-color:transparent}
+  .pprog{position:absolute;left:68px;right:64px;bottom:0;height:2px;background:var(--border)}
+  .pprog i{display:block;height:100%;width:0;background:var(--pink-bold);transition:width 1s linear}
+  .dock.open .pprog{opacity:0}
+  .deck{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s cubic-bezier(.2,.8,.2,1)}
+  .dock.open .deck{grid-template-rows:1fr}
+  .deck>div{overflow:hidden;min-height:0}
+  .deck .in{padding:6px 14px 16px;display:flex;flex-direction:column;gap:14px;align-items:center}
+  .row{display:flex;gap:10px;align-items:center;justify-content:center;width:100%}
+  button{font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:999px;cursor:pointer;transition:background .15s,transform .1s}
   button:active{transform:scale(.94)}
-  .c{width:64px;height:64px;font-size:22px;display:grid;place-items:center}
-  .c.big{width:84px;height:84px;background:var(--pink-bold);color:#fff;border-color:transparent;font-size:28px}
-  .v{flex:1;height:44px;font-size:14px;font-family:"Geist Mono",monospace}
+  .c{width:60px;height:60px;font-size:22px;display:grid;place-items:center}
+  .c.big{width:76px;height:76px;background:var(--pink-bold);color:#fff;border-color:transparent;font-size:26px}
+  .v{flex:1;height:42px;font-size:14px;font-family:"Geist Mono",monospace}
   .v.on{background:var(--mint);color:#0b0b0f;border-color:transparent;font-weight:600}
-  .prog{width:100%;max-width:520px;height:3px;border-radius:2px;background:var(--border);overflow:hidden}
+  .prog{width:100%;height:3px;border-radius:2px;background:var(--border);overflow:hidden}
   .prog i{display:block;height:100%;width:0;background:var(--pink-bold);transition:width 1s linear}
+  .tm{display:flex;justify-content:space-between;width:100%;font-size:11px;color:var(--muted);font-family:"Geist Mono",monospace;margin-top:-8px}
+  @media (prefers-reduced-motion:reduce){.pill.live .pth{animation:none}.dock,.deck,.pth{transition:none}}
 </style>
 </head>
 <body>
@@ -42,20 +64,28 @@
   <h1>beatdeck · no vocals</h1>
   <ul id="list"></ul>
 </main>
-<div class="bar">
-  <div class="prog"><i id="prog"></i></div>
-  <div class="now" id="now">…</div>
-  <div class="row">
-    <button class="c" data-a="prev" aria-label="previous">⏮</button>
-    <button class="c big" id="pp" data-a="toggle" aria-label="play/pause">▶</button>
-    <button class="c" data-a="next" aria-label="next">⏭</button>
+<div class="dock" id="dock">
+  <div class="pill" id="pill" role="button" aria-expanded="false" aria-label="open controls">
+    <img class="pth" id="pth" alt="">
+    <div class="pm"><div class="pt" id="pt">nothing on</div><div class="ps" id="ps">…</div></div>
+    <button class="mini" data-a="toggle" data-pp aria-label="play/pause">▶</button>
+    <div class="pprog"><i data-prog></i></div>
   </div>
-  <div class="row" id="vols">
-    <button class="v" data-v="25">25</button>
-    <button class="v" data-v="50">50</button>
-    <button class="v" data-v="75">75</button>
-    <button class="v" data-v="100">100</button>
-  </div>
+  <div class="deck"><div><div class="in">
+    <div class="prog"><i data-prog></i></div>
+    <div class="tm"><span id="t0">0:00</span><span id="t1">0:00</span></div>
+    <div class="row">
+      <button class="c" data-a="prev" aria-label="previous">⏮</button>
+      <button class="c big" data-a="toggle" data-pp aria-label="play/pause">▶</button>
+      <button class="c" data-a="next" aria-label="next">⏭</button>
+    </div>
+    <div class="row" id="vols">
+      <button class="v" data-v="25">25</button>
+      <button class="v" data-v="50">50</button>
+      <button class="v" data-v="75">75</button>
+      <button class="v" data-v="100">100</button>
+    </div>
+  </div></div></div>
 </div>
 <script type="module">
 const $ = s => document.querySelector(s)
@@ -72,23 +102,39 @@ $('#list').innerHTML = songs.map((s, i) => `
 const fmt = n => { n = Math.floor(n || 0); const h = n / 3600 | 0, m = (n % 3600) / 60 | 0, s = n % 60; return (h ? h + ':' : '') + String(m).padStart(h ? 2 : 1, '0') + ':' + String(s).padStart(2, '0') }
 
 const paint = st => {
-  if (st.cur !== cur) { cur = st.cur; document.querySelectorAll('li').forEach((l, i) => l.classList.toggle('on', i === cur)) }
-  $('#pp').textContent = st.paused ? '▶' : '⏸'
-  $('#now').textContent = songs[cur] ? `${st.paused ? 'paused' : 'playing'} · ${fmt(st.t)} / ${fmt(st.d)} · ${songs[cur].t}` : 'nothing on'
-  $('#prog').style.width = st.d ? (st.t / st.d * 100) + '%' : '0'
+  if (st.cur !== cur) {
+    cur = st.cur
+    document.querySelectorAll('li').forEach((l, i) => l.classList.toggle('on', i === cur))
+    if (songs[cur]) { $('#pth').src = `https://i.ytimg.com/vi/${songs[cur].id}/mqdefault.jpg`; $('#pt').textContent = songs[cur].t }
+  }
+  document.querySelectorAll('[data-pp]').forEach(b => b.textContent = st.paused ? '▶' : '⏸')
+  $('#pill').classList.toggle('live', !st.paused && !!songs[cur])
+  $('#ps').textContent = songs[cur] ? `${st.paused ? 'paused' : 'playing'} · ${fmt(st.t)} / ${fmt(st.d)} · ${songs[cur].ch}` : '…'
+  $('#t0').textContent = fmt(st.t); $('#t1').textContent = fmt(st.d)
+  document.querySelectorAll('[data-prog]').forEach(p => p.style.width = st.d ? (st.t / st.d * 100) + '%' : '0')
   if (st.vol !== vol) { vol = st.vol; document.querySelectorAll('.v').forEach(b => b.classList.toggle('on', +b.dataset.v === vol)) }
 }
 
 const refresh = () => api('status').then(paint).catch(() => { })
 refresh(); setInterval(refresh, 2000)
 
+const dock = $('#dock'), pill = $('#pill')
+const setOpen = o => { dock.classList.toggle('open', o); pill.setAttribute('aria-expanded', o) }
+
 document.addEventListener('click', async e => {
-  const li = e.target.closest('li'); if (li) { await api('play', `?i=${li.dataset.i}`); li.classList.add('on'); setTimeout(refresh, 1500); return }
-  const b = e.target.closest('button'); if (!b) return
-  if (b.dataset.a) await api(b.dataset.a)
-  if (b.dataset.v) await api('vol', `?v=${b.dataset.v}`)
-  setTimeout(refresh, b.dataset.a === 'toggle' || b.dataset.v ? 300 : 1500)
+  const b = e.target.closest('button')
+  if (b && dock.contains(b)) {                       // any control in the dock: act, stay as-is
+    if (b.dataset.a) await api(b.dataset.a)
+    if (b.dataset.v) await api('vol', `?v=${b.dataset.v}`)
+    setTimeout(refresh, b.dataset.a === 'toggle' || b.dataset.v ? 300 : 1500)
+    return
+  }
+  if (pill.contains(e.target)) return setOpen(!dock.classList.contains('open'))   // pill body toggles the deck
+  if (dock.contains(e.target)) return                                             // tap on deck padding: keep open
+  setOpen(false)                                                                  // outside: shrink to pill
+  const li = e.target.closest('li'); if (li) { await api('play', `?i=${li.dataset.i}`); li.classList.add('on'); setTimeout(refresh, 1500) }
 })
+document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false) })
 </script>
 </body>
 </html>
