@@ -6,6 +6,21 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Server picker. The page no longer assumes the machine that served it is
+  the one it controls: a chip in the header opens a list of beatdeck
+  servers (name + URL, kept in `localStorage`), and every `/api` call goes
+  to the selected one. Switching reloads the page against the new host.
+  When the page is served by a laptop itself, "this host" is always listed.
+- GitHub Pages deploy (`.github/workflows/pages.yml`, `npm run build`).
+  The built page has no API behind it, so it opens the picker on first
+  visit; point it at each laptop's `tailscale serve` HTTPS address. Vite's
+  `base` is `/beatdeck/` for build and preview, `/` for `npm start`.
+- Server side of the above in `vite.config.js`: CORS for
+  `https://nd28.github.io` (more via `BEATDECK_ORIGINS=a,b`), and
+  `allowedHosts` for `*.ts.net` / `*.local` so Vite's host check doesn't
+  403 requests that arrive through Tailscale or mDNS names.
+
 ### Changed
 - Rebuilt the `no vocals` section. The old picks skewed aggro — "ANGRY",
   "KILLER MODE", "Hard Rap", "HUSTLE! WORKOUT", "Dark Trap" — in both title
@@ -25,7 +40,6 @@ versions follow [Semantic Versioning](https://semver.org/).
   `--tab N`. If that tab is gone (restart, closed) it adopts a YouTube tab
   playing something from `songs.json`, else the first YouTube tab, else
   opens a fresh one — and sticks with it from then on.
-
 
 ## [1.4.0] - 2026-09-06
 

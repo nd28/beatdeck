@@ -59,14 +59,48 @@
   .prog{width:100%;height:3px;border-radius:2px;background:var(--border);overflow:hidden}
   .prog i{display:block;height:100%;width:0;background:var(--pink-bold);transition:width 1s linear}
   .tm{display:flex;justify-content:space-between;width:100%;font-size:11px;color:var(--muted);font-family:"Geist Mono",monospace;margin-top:-8px}
+  /* server chip in the header + picker dialog */
+  .srv{font:inherit;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:999px;color:var(--text);max-width:40%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .srv.off{border-color:var(--pink-bold);color:var(--pink-bold)}
+  dialog{border:1px solid var(--border);border-radius:24px;padding:0;background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);color:var(--text);width:min(420px,calc(100% - 32px));box-shadow:0 16px 60px rgba(0,0,0,.4)}
+  dialog::backdrop{background:rgba(0,0,0,.4)}
+  dialog form{padding:18px 16px 16px;display:flex;flex-direction:column;gap:12px}
+  dialog h2{margin:0 0 2px 4px;font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  #slist{gap:6px}
+  #slist li{padding:10px 8px 10px 14px;border-radius:18px;gap:10px}
+  #slist .m{display:flex;flex-direction:column;gap:2px}
+  #slist .t{font-size:13px;-webkit-line-clamp:1}
+  #slist .s{margin:0;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #slist .x{width:32px;height:32px;font-size:14px;display:grid;place-items:center;color:var(--muted);flex:none}
+  #slist .empty{padding:10px 14px;font-size:12px;color:var(--muted);cursor:default}
+  .add{display:flex;flex-direction:column;gap:8px;padding-top:6px;border-top:1px solid var(--border)}
+  .add input{font:inherit;font-size:14px;padding:10px 14px;border-radius:999px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:100%;outline:none}
+  .add input:focus{border-color:var(--pink-bold)}
+  .add .row{justify-content:flex-end}
+  .add .row button{padding:9px 16px;font-size:13px}
+  .add .row .go{background:var(--pink-bold);color:#fff;border-color:transparent}
+  .hint{margin:0 4px;font-size:11px;line-height:1.5;color:var(--muted)}
+  .hint code{font-family:"Geist Mono",monospace}
   @media (prefers-reduced-motion:reduce){.pill.live .pth{animation:none}.dock,.deck,.pth{transition:none}}
 </style>
 </head>
 <body>
 <main>
-  <h1>beatdeck <span class="ver">v%APP_VERSION%</span></h1>
+  <h1>beatdeck <button class="srv" id="srv" aria-label="choose server">…</button><span class="ver">v%APP_VERSION%</span></h1>
   <div id="list"></div>
 </main>
+<dialog id="sdlg">
+  <form method="dialog">
+    <h2>servers</h2>
+    <ul id="slist"></ul>
+    <div class="add">
+      <input id="sname" placeholder="name (macbook)" autocomplete="off" autocapitalize="off">
+      <input id="surl" placeholder="https://macbook.tailnet.ts.net" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="row"><button type="submit">close</button><button type="button" class="go" id="sadd">add</button></div>
+    </div>
+    <p class="hint">each machine runs <code>npm start</code>; on tailscale expose it with <code>tailscale serve --bg 5180</code> and use the https <code>*.ts.net</code> address here. this page is https, so plain <code>http://</code> targets are blocked by the browser.</p>
+  </form>
+</dialog>
 <div class="dock" id="dock">
   <div class="pill" id="pill" role="button" aria-expanded="false" aria-label="open controls">
     <img class="pth" id="pth" alt="">
@@ -92,8 +126,51 @@
 </div>
 <script type="module">
 const $ = s => document.querySelector(s)
-const api = (p, q = '') => fetch(`/api/${p}${q}`).then(r => r.json())
-const songs = await api('songs')
+
+// which machine to drive. '' = the origin this page came from (only true when a
+// laptop serves the page itself); otherwise an absolute url of another beatdeck.
+// remembered per browser in localStorage.
+const local = import.meta.env.BASE_URL === '/'                     // pages build has base /beatdeck/, so no api here
+const servers = JSON.parse(localStorage.getItem('beatdeck.servers') || '[]')   // [{name,url}]
+let base = localStorage.getItem('beatdeck.server') ?? (local ? '' : servers[0]?.url ?? null)
+const srvName = u => u === '' ? 'this host' : (servers.find(s => s.url === u)?.name || u?.replace(/^https?:\/\//, '') || 'no server')
+const api = (p, q = '') => fetch(`${base ?? ''}/api/${p}${q}`).then(r => r.ok ? r.json() : Promise.reject(new Error(r.status)))
+
+const sdlg = $('#sdlg'), slist = $('#slist')
+const save = () => { localStorage.setItem('beatdeck.servers', JSON.stringify(servers)); if (base !== null) localStorage.setItem('beatdeck.server', base) }
+const use = u => { base = u; save(); location.reload() }         // switching = fresh page against the new host, simplest correct thing
+const drawServers = () => {
+  const rows = [...(local ? [{ name: 'this host', url: '' }] : []), ...servers]
+  slist.innerHTML = rows.length ? rows.map(s => `
+    <li data-u="${s.url}" class="${s.url === base ? 'on' : ''}">
+      <div class="m"><div class="t">${s.name}</div><div class="s">${s.url || location.origin}</div></div>
+      ${s.url ? `<button type="button" class="x" data-rm="${s.url}" aria-label="remove ${s.name}">✕</button>` : ''}
+    </li>`).join('') : '<li class="empty">no servers yet — add one below</li>'
+}
+$('#srv').onclick = () => { drawServers(); sdlg.showModal() }
+$('#sadd').onclick = () => {
+  const url = $('#surl').value.trim().replace(/\/+$/, ''), name = $('#sname').value.trim() || url.replace(/^https?:\/\//, '')
+  if (!/^https?:\/\/\S+$/.test(url)) return $('#surl').focus()
+  const i = servers.findIndex(s => s.url === url)
+  i >= 0 ? servers[i].name = name : servers.push({ name, url })
+  use(url)
+}
+slist.onclick = e => {
+  const rm = e.target.closest('[data-rm]')
+  if (rm) { servers.splice(servers.findIndex(s => s.url === rm.dataset.rm), 1); save(); if (base === rm.dataset.rm) { localStorage.removeItem('beatdeck.server'); location.reload() } return drawServers() }
+  const li = e.target.closest('li[data-u]')
+  if (li && li.dataset.u !== base) use(li.dataset.u)
+}
+
+$('#srv').textContent = srvName(base)
+let songs = []
+try { songs = await api('songs') }
+catch {
+  $('#srv').classList.add('off')
+  $('#pt').textContent = base === null ? 'pick a server' : `can't reach ${srvName(base)}`
+  $('#ps').textContent = base === null ? 'tap the chip in the header' : base || location.origin
+  drawServers(); sdlg.showModal()
+}
 let cur = -1, vol = null
 
 const groups = []                                    // group by `g`, keep first-seen order
@@ -139,7 +216,7 @@ const refresh = () => api('status').then(s => {
   if (!s.d && s.cur === st.cur) s.d = st.d              // video still loading: keep the length we already know
   paint(s)
 }).catch(() => { })
-refresh(); setInterval(refresh, 2000)
+if (songs.length) { refresh(); setInterval(refresh, 2000) }   // unreachable server: don't hammer it, the dialog is already up
 
 // paint the expected outcome now, send the request, then let real state back in.
 // `settle` is how long after the response the server still needs (play waits 4s before hitting video.play()).

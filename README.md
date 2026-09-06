@@ -28,6 +28,34 @@ the first play opens it.
 - play/pause, prev, next
 - volume 25 / 50 / 75 / 100 — sets the default sink, not the tab
 
+## More than one machine
+
+The chip next to the title picks which beatdeck server the page talks to.
+The list (name + URL) lives in the browser's `localStorage`; "this host" is
+the machine that served the page, if it's running the server. Each machine
+runs its own `npm start` with its own `songs.json`, Brave and audio sink —
+the page only decides where to send `/api` calls.
+
+The page is also published to <https://nd28.github.io/beatdeck/> on every
+push (`.github/workflows/pages.yml` runs `npm run build`; the repo's Pages
+source must be set to "GitHub Actions" once). That copy has no server
+behind it, so it opens the picker on first visit. Because it's HTTPS, the
+targets must be HTTPS too — plain `http://192.168.x.x:5180` is mixed
+content and the browser refuses it. Tailscale gives you that for free on
+each machine:
+
+```
+tailscale serve --bg 5180        # https://<machine>.<tailnet>.ts.net → localhost:5180
+tailscale serve status
+```
+
+Add `https://<machine>.<tailnet>.ts.net` in the picker. Only devices on your
+tailnet can reach it; there is no auth on `/api`, so don't put it on the
+public internet. The server already allows the Pages origin and `*.ts.net`
+host names; extra page origins go in `BEATDECK_ORIGINS=https://a,https://b`
+when starting it. `npm run preview` serves the built copy locally at
+`/beatdeck/` for checking it.
+
 ## Neovim
 
 The same remote from inside nvim, as a plugin that lives in `nvim/` here. It

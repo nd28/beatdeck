@@ -110,8 +110,15 @@ const api = {
   vol: async q => { await volume.set(Math.max(0, Math.min(100, parseInt(q.get('v')) || 0))); return { ok: 1 } },
 }
 
-export default defineConfig({
-  server: { host: '0.0.0.0', port: 5180, strictPort: true },
+// the page can also be served from github pages and pointed at this server
+// over tailscale. that needs two things vite blocks by default: a foreign
+// Origin on /api (cors) and a foreign Host header (tailscale serve forwards
+// the *.ts.net name). extra origins: BEATDECK_ORIGINS=https://a,https://b
+const origins = ['https://nd28.github.io', ...(process.env.BEATDECK_ORIGINS || '').split(',').filter(Boolean)]
+
+export default defineConfig(({ command, isPreview }) => ({
+  base: command === 'serve' && !isPreview ? '/' : '/beatdeck/',   // pages serves from /<repo>/; dev stays at /
+  server: { host: '0.0.0.0', port: 5180, strictPort: true, allowedHosts: ['.ts.net', '.local'], cors: { origin: origins } },
   plugins: [{
     name: 'beatdeck-api',
     transformIndexHtml: html => html.replaceAll('%APP_VERSION%', pkg().version),
@@ -126,4 +133,4 @@ export default defineConfig({
       })
     }
   }]
-})
+}))
