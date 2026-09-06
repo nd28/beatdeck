@@ -3,6 +3,7 @@ import { execFile } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 
 const songs = JSON.parse(readFileSync(new URL('./songs.json', import.meta.url)))
+const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url)))
 let cur = 0
 
 const sh = (cmd, args) => new Promise(res =>
@@ -42,6 +43,7 @@ export default defineConfig({
   server: { host: '0.0.0.0', port: 5180, strictPort: true },
   plugins: [{
     name: 'beatdeck-api',
+    transformIndexHtml: html => html.replaceAll('%APP_VERSION%', version),
     configureServer(s) {
       s.middlewares.use(async (req, res, next) => {
         const u = new URL(req.url, 'http://x')

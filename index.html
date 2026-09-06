@@ -13,7 +13,8 @@
   body{margin:0;font-family:Geist,system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;
     background-image:radial-gradient(60vw 60vw at 80% -10%,color-mix(in srgb,var(--pink-bold) 30%,transparent),transparent 70%),radial-gradient(50vw 50vw at -10% 100%,color-mix(in srgb,var(--mint) 25%,transparent),transparent 70%);background-attachment:fixed}
   main{max-width:520px;margin:0 auto;padding:24px 16px calc(110px + env(safe-area-inset-bottom))}
-  h1{font-size:14px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:8px 4px 16px}
+  h1{font-size:14px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:8px 4px 16px;display:flex;align-items:baseline;gap:10px}
+  .ver{font-size:11px;letter-spacing:0;text-transform:none;font-family:"Geist Mono",monospace;color:var(--muted);opacity:.6;margin-left:auto}
   ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
   li{display:flex;align-items:center;gap:14px;padding:10px 14px 10px 10px;border-radius:24px;background:var(--surface);border:1px solid var(--border);backdrop-filter:blur(14px);cursor:pointer;transition:background .15s,transform .1s}
   li:active{transform:scale(.985)}
@@ -61,7 +62,7 @@
 </head>
 <body>
 <main>
-  <h1>beatdeck · no vocals</h1>
+  <h1>beatdeck · no vocals <span class="ver">v%APP_VERSION%</span></h1>
   <ul id="list"></ul>
 </main>
 <div class="dock" id="dock">
