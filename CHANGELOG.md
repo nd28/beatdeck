@@ -6,6 +6,30 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-06
+
+### Added
+- Olivia Dean section: Jazz Cafe set, Sofar London set, the Messy live film,
+  and two long greatest-hits mixes. Long-form only, so the deck stays a
+  put-it-on-and-leave-it thing.
+- Taylor Swift section: six hour-plus mixes (greatest hits, a Swiftie DJ set,
+  chill/study playlists), full tour concerts from Fearless through Eras
+  (Munich), and shorter live sets (Super Saturday Night, BBC Big Weekend,
+  Tiny Desk, Live On The Seine).
+- Optional `g` field on each entry in `songs.json` groups the list into
+  labelled sections (`no vocals`, `olivia dean`, `taylor swift`). Entries
+  without `g` render without a header.
+
+### Changed
+- Header is now just `beatdeck` — the deck is no longer instrumental-only.
+- `songs.json` is re-read when its mtime changes, so editing the track list no
+  longer needs a server restart (reload the page to see new rows).
+
+### Fixed
+- Row highlighting keys off `data-i` instead of DOM position, so it survives
+  the section headers; tapping a row now clears the previous row's highlight
+  immediately instead of showing two lit rows until the next poll.
+
 ## [1.1.0] - 2026-09-06
 
 ### Added
@@ -35,6 +59,7 @@ versions follow [Semantic Versioning](https://semver.org/).
 - Fixed bottom bar with progress, now-playing text, transport buttons, and
   25/50/75/100 volume presets.
 
-[Unreleased]: https://github.com/nd28/beatdeck/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/nd28/beatdeck/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/nd28/beatdeck/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/nd28/beatdeck/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/nd28/beatdeck/releases/tag/v1.0.0
