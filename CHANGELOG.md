@@ -6,6 +6,16 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- Rebuilt the `no vocals` section. The old picks skewed aggro — "ANGRY",
+  "KILLER MODE", "Hard Rap", "HUSTLE! WORKOUT", "Dark Trap" — in both title
+  and artwork, which read as a boys' club on the deck. Same music (boom bap,
+  90s instrumentals, jazz hop, G-funk, trap, trapsoul), now 20 mixes chosen
+  for neutral framing, plus R&B-leaning instrumentals (SZA / Summer Walker
+  / TLC-era lo-fi flips) so the section isn't one flavour. Two 3-minute
+  single beats dropped; everything left is 50 min to 4 h. One exception to
+  the label: DJ Elly's all-vinyl Nujabes set has a few vocal cuts.
+
 ## [1.4.0] - 2026-09-06
 
 ### Added
