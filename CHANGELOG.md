@@ -6,6 +6,23 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-06
+
+### Added
+- Neovim plugin in `nvim/` (`lua/beatdeck/init.lua`, `plugin/beatdeck.lua`).
+  Add `~/beatdeck/nvim` to `runtimepath` and you get `:Beatdeck` with
+  `start`, `status`, `toggle`, `next`, `prev`, `play`, `list`, `vol`, plus
+  `<leader>b*` keymaps. It is a curl client over the existing `/api`
+  endpoints; the server keeps all bctl/volume knowledge.
+- `:Beatdeck start` probes `/api/songs` and, if nothing answers, spawns
+  `npm start` in the repo detached (survives nvim quitting), logging to
+  `stdpath('log')/beatdeck.log`, then polls until the server is up.
+- `:Beatdeck play <words>` finds a mix by title/channel/section and plays it
+  by index, regardless of the current queue position. Every word must appear
+  literally (case-insensitive), title matches rank first, fuzzy is the
+  fallback. `<Tab>` completes titles. Bare `play` / `list [words]` open a
+  `vim.ui.select` picker.
+
 ## [1.3.0] - 2026-09-06
 
 ### Added
@@ -91,7 +108,8 @@ versions follow [Semantic Versioning](https://semver.org/).
 - Fixed bottom bar with progress, now-playing text, transport buttons, and
   25/50/75/100 volume presets.
 
-[Unreleased]: https://github.com/nd28/beatdeck/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/nd28/beatdeck/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/nd28/beatdeck/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/nd28/beatdeck/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/nd28/beatdeck/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/nd28/beatdeck/compare/v1.1.0...v1.2.0

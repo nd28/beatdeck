@@ -1,6 +1,6 @@
 {
   "name": "beatdeck",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Phone remote for long-form YouTube mixes playing in a bctl-driven Brave tab",
   "private": true,
   "type": "module",
