@@ -17,11 +17,24 @@ const json = url => {
 const load = json('./songs.json')
 const pkg = json('./package.json')
 
-const sh = (cmd, args) => new Promise(res =>
-  execFile(cmd, args, { timeout: 15000 }, (e, out, err) => res(e ? (err || e.message) : out.trim())))
+const run = (cmd, args) => new Promise(res =>
+  execFile(cmd, args, { timeout: 15000 }, (e, out, err) => res({ ok: !e, out: e ? (err || e.message).trim() : out.trim() })))
+const sh = async (cmd, args) => (await run(cmd, args)).out
 
 const bctl = (...a) => sh('bctl', [...a, '--match', 'youtube'])
 const ev = js => bctl('eval', js)
+
+// navigate the youtube tab; if it was closed, open a fresh one instead.
+// a tab made through devtools starts hidden and youtube won't load media
+// until it's visible, so bring it to the front too.
+const cdp = `http://127.0.0.1:${process.env.BCTL_PORT || 9222}`
+const goto = async url => {
+  const r = await run('bctl', ['goto', url, '--match', 'youtube'])
+  if (r.ok) return
+  console.log('beatdeck: no youtube tab, opening one')
+  const id = (await run('bctl', ['open', url])).out
+  if (id) await fetch(`${cdp}/json/activate/${id}`).catch(() => { })
+}
 
 // system volume, 0-100. linux = pipewire via wpctl, mac = osascript
 const volume = process.platform === 'darwin' ? {
@@ -35,7 +48,7 @@ const volume = process.platform === 'darwin' ? {
 const play = async i => {
   const songs = load()
   cur = (i + songs.length) % songs.length
-  await bctl('goto', `https://www.youtube.com/watch?v=${songs[cur].id}`)
+  await goto(`https://www.youtube.com/watch?v=${songs[cur].id}`)
   setTimeout(() => ev('var v=document.querySelector("video");if(v){v.volume=1;v.muted=false;v.play()}'), 4000)
   return { cur }
 }

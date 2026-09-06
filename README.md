@@ -18,8 +18,9 @@ npm start          # 0.0.0.0:5180
 
 Open `http://<machine-ip>:5180` on the phone. Needs `bctl` on the PATH of the
 machine running it (plus `wpctl` on Linux; macOS uses the built-in
-`osascript`), and a Brave tab whose URL matches `youtube`
-(`bctl open https://www.youtube.com` if there isn't one).
+`osascript`), and a Brave started with the debug port (`bctl start`). The
+player lives in whichever tab's URL matches `youtube`; if there isn't one,
+the first play opens it.
 
 ## Controls
 

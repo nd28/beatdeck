@@ -114,8 +114,13 @@ $('#list').innerHTML = groups.map(g => `
   </section>`).join('')
 
 const fmt = n => { n = Math.floor(n || 0); const h = n / 3600 | 0, m = (n % 3600) / 60 | 0, s = n % 60; return (h ? h + ':' : '') + String(m).padStart(h ? 2 : 1, '0') + ':' + String(s).padStart(2, '0') }
+const secs = len => (len || '').split(':').reduce((a, b) => a * 60 + +b, 0)
 
-const paint = st => {
+let st = { paused: true, t: 0, d: 0, cur: -1, vol: null }   // last painted state
+let hold = 0                                                 // polls don't overwrite the UI until this time
+
+const paint = s => {
+  st = s
   if (st.cur !== cur) {
     cur = st.cur
     document.querySelectorAll('li[data-i]').forEach(l => l.classList.toggle('on', +l.dataset.i === cur))
@@ -129,29 +134,45 @@ const paint = st => {
   if (st.vol !== vol) { vol = st.vol; document.querySelectorAll('.v').forEach(b => b.classList.toggle('on', +b.dataset.v === vol)) }
 }
 
-const refresh = () => api('status').then(paint).catch(() => { })
+const refresh = () => api('status').then(s => {
+  if (Date.now() < hold) return
+  if (!s.d && s.cur === st.cur) s.d = st.d              // video still loading: keep the length we already know
+  paint(s)
+}).catch(() => { })
 refresh(); setInterval(refresh, 2000)
+
+// paint the expected outcome now, send the request, then let real state back in.
+// `settle` is how long after the response the server still needs (play waits 4s before hitting video.play()).
+const act = async (patch, req, settle = 0) => {
+  hold = Infinity
+  paint({ ...st, ...patch })
+  try { await req() } catch { settle = 0 }
+  hold = Date.now() + settle
+  setTimeout(refresh, settle + 200)
+}
+const jump = i => {
+  const n = (i + songs.length) % songs.length
+  return act({ cur: n, paused: false, t: 0, d: secs(songs[n].len) }, () => api('play', `?i=${n}`), 5000)
+}
 
 const dock = $('#dock'), pill = $('#pill')
 const setOpen = o => { dock.classList.toggle('open', o); pill.setAttribute('aria-expanded', o) }
 
-document.addEventListener('click', async e => {
+document.addEventListener('click', e => {
   const b = e.target.closest('button')
   if (b && dock.contains(b)) {                       // any control in the dock: act, stay as-is
-    if (b.dataset.a) await api(b.dataset.a)
-    if (b.dataset.v) await api('vol', `?v=${b.dataset.v}`)
-    setTimeout(refresh, b.dataset.a === 'toggle' || b.dataset.v ? 300 : 1500)
+    const a = b.dataset.a
+    if (a === 'toggle') act({ paused: !st.paused }, () => api('toggle'))
+    if (a === 'prev') jump(st.cur - 1)
+    if (a === 'next') jump(st.cur + 1)
+    if (b.dataset.v) act({ vol: +b.dataset.v }, () => api('vol', `?v=${b.dataset.v}`))
     return
   }
   if (pill.contains(e.target)) return setOpen(!dock.classList.contains('open'))   // pill body toggles the deck
   if (dock.contains(e.target)) return                                             // tap on deck padding: keep open
   setOpen(false)                                                                  // outside: shrink to pill
   const li = e.target.closest('li[data-i]')
-  if (li) {
-    await api('play', `?i=${li.dataset.i}`)
-    document.querySelectorAll('li[data-i]').forEach(l => l.classList.toggle('on', l === li))
-    setTimeout(refresh, 1500)
-  }
+  if (li) jump(+li.dataset.i)
 })
 document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false) })
 </script>

@@ -6,6 +6,29 @@ versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-06
+
+### Added
+- Optimistic UI. Tapping a row, play/pause, prev/next or a volume preset
+  paints the expected state immediately (row highlight, thumbnail, title,
+  length from `songs.json`, play/pause glyph, volume chip) instead of waiting
+  a round trip plus a poll. Polls are held back until the server has caught
+  up (~5s for a track change, since the server waits 4s before starting the
+  video), then real state takes over. A failed request drops the hold so the
+  UI snaps back to truth.
+- Prev/next are computed from the state on the phone and sent as `play?i=`,
+  so they always move relative to what the screen shows. The `/api/prev` and
+  `/api/next` endpoints still exist.
+
+### Fixed
+- Closing the YouTube tab in Brave used to leave the remote dead: `bctl goto
+  --match youtube` had nothing to match and the error was swallowed. `play`
+  now falls back to `bctl open`, then activates the new tab through the
+  DevTools `/json/activate` endpoint — a tab created via DevTools starts
+  hidden and YouTube won't load media until it's visible.
+- No more `0:00 / 0:00` flash while a new video is still loading; the
+  length already on screen is kept until the player reports one.
+
 ## [1.2.1] - 2026-09-06
 
 ### Fixed
@@ -68,7 +91,8 @@ versions follow [Semantic Versioning](https://semver.org/).
 - Fixed bottom bar with progress, now-playing text, transport buttons, and
   25/50/75/100 volume presets.
 
-[Unreleased]: https://github.com/nd28/beatdeck/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/nd28/beatdeck/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/nd28/beatdeck/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/nd28/beatdeck/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/nd28/beatdeck/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/nd28/beatdeck/compare/v1.0.0...v1.1.0
