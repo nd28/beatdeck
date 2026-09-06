@@ -15,6 +15,8 @@
   main{max-width:520px;margin:0 auto;padding:24px 16px calc(110px + env(safe-area-inset-bottom))}
   h1{font-size:14px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:8px 4px 16px;display:flex;align-items:baseline;gap:10px}
   .ver{font-size:11px;letter-spacing:0;text-transform:none;font-family:"Geist Mono",monospace;color:var(--muted);opacity:.6;margin-left:auto}
+  #list{display:flex;flex-direction:column;gap:20px}
+  .gh{font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 8px 16px}
   ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
   li{display:flex;align-items:center;gap:14px;padding:10px 14px 10px 10px;border-radius:24px;background:var(--surface);border:1px solid var(--border);backdrop-filter:blur(14px);cursor:pointer;transition:background .15s,transform .1s}
   li:active{transform:scale(.985)}
@@ -62,8 +64,8 @@
 </head>
 <body>
 <main>
-  <h1>beatdeck · no vocals <span class="ver">v%APP_VERSION%</span></h1>
-  <ul id="list"></ul>
+  <h1>beatdeck <span class="ver">v%APP_VERSION%</span></h1>
+  <div id="list"></div>
 </main>
 <div class="dock" id="dock">
   <div class="pill" id="pill" role="button" aria-expanded="false" aria-label="open controls">
@@ -94,18 +96,29 @@ const api = (p, q = '') => fetch(`/api/${p}${q}`).then(r => r.json())
 const songs = await api('songs')
 let cur = -1, vol = null
 
-$('#list').innerHTML = songs.map((s, i) => `
-  <li data-i="${i}">
-    <img class="th" src="https://i.ytimg.com/vi/${s.id}/mqdefault.jpg" alt="" loading="lazy">
-    <div class="m"><div class="t">${s.t}</div><div class="s">${s.ch} · ${s.len}</div></div>
-  </li>`).join('')
+const groups = []                                    // group by `g`, keep first-seen order
+songs.forEach((s, i) => {
+  let g = groups.find(x => x.name === (s.g || ''))
+  if (!g) groups.push(g = { name: s.g || '', rows: [] })
+  g.rows.push([s, i])
+})
+
+$('#list').innerHTML = groups.map(g => `
+  <section>
+    ${g.name ? `<h2 class="gh">${g.name}</h2>` : ''}
+    <ul>${g.rows.map(([s, i]) => `
+      <li data-i="${i}">
+        <img class="th" src="https://i.ytimg.com/vi/${s.id}/mqdefault.jpg" alt="" loading="lazy">
+        <div class="m"><div class="t">${s.t}</div><div class="s">${s.ch} · ${s.len}</div></div>
+      </li>`).join('')}</ul>
+  </section>`).join('')
 
 const fmt = n => { n = Math.floor(n || 0); const h = n / 3600 | 0, m = (n % 3600) / 60 | 0, s = n % 60; return (h ? h + ':' : '') + String(m).padStart(h ? 2 : 1, '0') + ':' + String(s).padStart(2, '0') }
 
 const paint = st => {
   if (st.cur !== cur) {
     cur = st.cur
-    document.querySelectorAll('li').forEach((l, i) => l.classList.toggle('on', i === cur))
+    document.querySelectorAll('li[data-i]').forEach(l => l.classList.toggle('on', +l.dataset.i === cur))
     if (songs[cur]) { $('#pth').src = `https://i.ytimg.com/vi/${songs[cur].id}/mqdefault.jpg`; $('#pt').textContent = songs[cur].t }
   }
   document.querySelectorAll('[data-pp]').forEach(b => b.textContent = st.paused ? '▶' : '⏸')
@@ -133,7 +146,12 @@ document.addEventListener('click', async e => {
   if (pill.contains(e.target)) return setOpen(!dock.classList.contains('open'))   // pill body toggles the deck
   if (dock.contains(e.target)) return                                             // tap on deck padding: keep open
   setOpen(false)                                                                  // outside: shrink to pill
-  const li = e.target.closest('li'); if (li) { await api('play', `?i=${li.dataset.i}`); li.classList.add('on'); setTimeout(refresh, 1500) }
+  const li = e.target.closest('li[data-i]')
+  if (li) {
+    await api('play', `?i=${li.dataset.i}`)
+    document.querySelectorAll('li[data-i]').forEach(l => l.classList.toggle('on', l === li))
+    setTimeout(refresh, 1500)
+  }
 })
 document.addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false) })
 </script>
